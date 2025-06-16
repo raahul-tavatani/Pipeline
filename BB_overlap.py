@@ -37,7 +37,7 @@ def visualize(pcd, pred_boxes, gt_boxes):
         extent = box[3:6]
         yaw_rad = box[6]
         yaw_deg = math.degrees(yaw_rad)
-        bbox = create_bbox(center_flipped, extent, yaw_deg, color=(1, 0, 0))
+        bbox = create_bbox(center_flipped, extent, -yaw_deg, color=(1, 0, 0))
         geometries.append(bbox)
 
     # 🟢 Green: Ground truth boxes

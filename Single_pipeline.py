@@ -12,11 +12,11 @@ client.set_timeout(10.0)
 client.load_world('Lidar_Testing_Ground')
 
 
-def draw_axes(world, location=carla.Location(0, -150, 0.5), axis_length=2.0, duration=0):
-    debug = world.debug
-    debug.draw_line(location, location + carla.Location(x=axis_length), 0.1, carla.Color(255, 0, 0), duration)
-    debug.draw_line(location, location + carla.Location(y=axis_length), 0.1, carla.Color(0, 255, 0), duration)
-    debug.draw_line(location, location + carla.Location(z=axis_length), 0.1, carla.Color(0, 0, 255), duration)
+# def draw_axes(world, location=carla.Location(0, -150, 0.5), axis_length=2.0, duration=0):
+#     debug = world.debug
+#     debug.draw_line(location, location + carla.Location(x=axis_length), 0.1, carla.Color(255, 0, 0), duration)
+#     debug.draw_line(location, location + carla.Location(y=axis_length), 0.1, carla.Color(0, 255, 0), duration)
+#     debug.draw_line(location, location + carla.Location(z=axis_length), 0.1, carla.Color(0, 0, 255), duration)
 
 
 def spawn_lidar(world, blueprint_library, location):
@@ -29,7 +29,7 @@ def spawn_lidar(world, blueprint_library, location):
     lidar_bp.set_attribute('rotation_frequency', '10')
     lidar_bp.set_attribute('upper_fov', '7')
     lidar_bp.set_attribute('lower_fov', '-16')
-    transform = carla.Transform(location)
+    transform = carla.Transform(location, carla.Rotation(pitch=0, yaw=0, roll=0))
     lidar = world.spawn_actor(lidar_bp, transform)
     if lidar is not None:
         print(" LiDAR sensor spawned successfully.")
@@ -39,9 +39,13 @@ def spawn_lidar(world, blueprint_library, location):
 
 
 
-def spawn_vehicle_at(world, blueprint_library, x, y, z=0, yaw=0):
+def spawn_vehicle_at(world, blueprint_library,lidar_location, x, y, z=0, yaw=0):
     vehicle_bp = blueprint_library.filter("vehicle")[0]
-    location = carla.Location(x=x, y=y, z=z)
+    location = carla.Location(
+        x=lidar_location.x + x,
+        y=lidar_location.y + y,
+        z=0
+    )
     rotation = carla.Rotation(pitch=0, yaw=yaw, roll=0)
     transform = carla.Transform(location, rotation)
 
@@ -107,6 +111,7 @@ def lidar_callback(point_cloud, sensor_queue, save_path="C:\\Pipeline\\saved_dat
     xyz_points = points[:, :3]
     print(f"📡 LiDAR callback: received {xyz_points.shape[0]} points")
 
+
     if xyz_points.shape[0] > 0:
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(xyz_points)
@@ -163,7 +168,7 @@ def main():
         world.apply_settings(settings)
 
         sensor_queue = Queue()
-        lidar_location = carla.Location(x=0, y=0, z=1.6)
+        lidar_location = carla.Location(x=-150, y=0, z=1.7)
 
         # Spawn LiDAR at the origin
         lidar = spawn_lidar(world, blueprint_library, lidar_location)
@@ -181,15 +186,15 @@ def main():
 
         # Define 4 spawn points around the LiDAR
         vehicle_positions = [
-            (10, 5),     # Right
-            (-10, -5),    # Left
-            (-5, 10),     # Front
-            (5, -10)     # Back
+            (10, 5),     # RT
+            #(-15, 15),    # LT
+            #(-10, 0),     # LB
+            (10, -5)     # Back
         ]
 
         # Spawn vehicles at those locations
         for x, y in vehicle_positions:
-            vehicle = spawn_vehicle_at(world, blueprint_library, x, y)
+            vehicle = spawn_vehicle_at(world, blueprint_library,lidar_location, x, y)
             if vehicle:
                 vehicles.append(vehicle)
 
