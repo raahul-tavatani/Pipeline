@@ -39,3 +39,24 @@ cd C:\Pipeline
 python BB_overlap.py
 cd C:\OpenPCDet-Win11-Compatible/win_env_openpcdet/Scripts 
 deactivate
+
+
+### point_rcnn (Openpcdet)
+cd C:\Pipeline
+python Single_pipeline.py
+
+cd C:\OpenPCDet-Win11-Compatible/win_env_openpcdet/Scripts 
+activate
+
+cd C:\Pipeline
+python pcd_to_kitti_bin.py
+
+cd C:\OpenPCDet-Win11-Compatible/tools
+python demo.py ^
+--cfg_file cfgs/kitti_models/pointrcnn.yaml ^
+--ckpt ../models/pointrcnn_7870.pth ^
+--data_path C:\Pipeline/saved_data/single_frame.bin
+cd C:\Pipeline
+python BB_overlap.py
+cd C:\OpenPCDet-Win11-Compatible/win_env_openpcdet/Scripts 
+deactivate
