@@ -6,12 +6,12 @@ import math
 
 
 def load_point_cloud(pcd_path):
-    print(f"📂 Loading point cloud: {pcd_path}")
+    print(f" Loading point cloud: {pcd_path}")
     return o3d.io.read_point_cloud(pcd_path)
 
 
 def load_json(path):
-    print(f"📂 Loading JSON: {path}")
+    print(f" Loading JSON: {path}")
     with open(path, 'r') as f:
         return json.load(f)
 
@@ -30,17 +30,17 @@ def create_bbox(center, extent, yaw_deg, color):
 def visualize(pcd, pred_boxes, gt_boxes):
     geometries = [pcd]
 
-    # 🔴 Red: Predicted boxes
+    #  Red: Predicted boxes
     for box in pred_boxes:
         center = box[:3]
         center_flipped = [center[0], -center[1], center[2]]
         extent = box[3:6]
         yaw_rad = box[6]
         yaw_deg = math.degrees(yaw_rad)
-        bbox = create_bbox(center_flipped, extent, -yaw_deg, color=(1, 0, 0))
+        bbox = create_bbox(center_flipped, extent, yaw_deg, color=(1, 0, 0))
         geometries.append(bbox)
 
-    # 🟢 Green: Ground truth boxes
+    #  Green: Ground truth boxes
     for obj in gt_boxes:
         center = obj['center_lidar']
         extent = obj['extent']
@@ -62,7 +62,7 @@ def visualize(pcd, pred_boxes, gt_boxes):
         bbox = create_bbox(center_vec, extent_vec, yaw, color=(0, 1, 0))
         geometries.append(bbox)
 
-    print("🎨 Rendering point cloud with predicted (🔴) and ground truth (🟢) boxes...")
+    print(" Rendering point cloud with predicted red and ground truth green boxes...")
     o3d.visualization.draw_geometries(geometries)
 
 
@@ -74,7 +74,7 @@ def main():
 
     for path in [pcd_path, pred_json_path, gt_json_path]:
         if not os.path.exists(path):
-            print(f"❌ File not found: {path}")
+            print(f" File not found: {path}")
             return
 
     pcd = load_point_cloud(pcd_path)
