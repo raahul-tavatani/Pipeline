@@ -1,21 +1,22 @@
 import subprocess
 import os
 
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+PIPELINE_SCRIPT = os.path.join(BASE_DIR, "Single_pipeline.py")
+
 PORT = 3000
-X_POS = 60
+X_POS = 30
 GAPS = list(range(2, 51, 5))  # 2m to 50m in 5m steps
 
-# SAVE_ROOT = r"C:\Pipeline\saved_data\Azimutal_tests"
-# os.makedirs(SAVE_ROOT, exist_ok=True)
 
 for gap in GAPS:
     tag = f"azimutal_separability_{gap}m"
     y1 = -gap / 2
     y2 = gap / 2
 
-    save_tag = os.path.join("Azimutal_tests", tag)  # For consistency in your saving scheme
+    save_tag = os.path.join("Azimutal_tests", tag) 
     cmd = [
-        "python", r"C:\Pipeline\Single_pipeline.py",
+        "python", PIPELINE_SCRIPT,
         "--port", str(PORT),
         "--x_dist_1", str(X_POS),
         "--y_dist_1", str(y1),

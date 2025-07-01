@@ -31,14 +31,21 @@ def convert_pcd_to_bin_open3d(pcd_path, bin_path):
         print(f" Error processing {pcd_path}: {e}")
 
 def convert_all_pcds(base_dir):
-    print(f"🔍 Scanning directory: {base_dir}")
-    for root, _, files in os.walk(base_dir):
-        for file in files:
-            if file.lower().endswith(".pcd"):
-                pcd_path = os.path.join(root, file)
-                bin_name = os.path.splitext(file)[0] + ".bin"
-                bin_path = os.path.join(root, bin_name)
-                convert_pcd_to_bin_open3d(pcd_path, bin_path)
+    print(f"🔍 Recursively scanning for PCD files in: {base_dir}")
+
+    for root, dirs, files in os.walk(base_dir):
+        # We only convert files inside any "pcd" folder
+        if os.path.basename(root).lower() == "pcd":
+            # Compute corresponding "bin" folder path
+            bin_folder = os.path.join(os.path.dirname(root), "bin")
+            os.makedirs(bin_folder, exist_ok=True)
+
+            for file in files:
+                if file.lower().endswith(".pcd"):
+                    pcd_path = os.path.join(root, file)
+                    bin_name = os.path.splitext(file)[0] + ".bin"
+                    bin_path = os.path.join(bin_folder, bin_name)
+                    convert_pcd_to_bin_open3d(pcd_path, bin_path)
 
 if __name__ == "__main__":
     BASE_DIR = r"C:\Pipeline\saved_data"

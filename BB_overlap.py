@@ -67,8 +67,8 @@ def visualize(pcd, pred_boxes, gt_boxes):
 
 
 def main():
-    base_path = r"C:\Pipeline\saved_data"
-    pcd_path = os.path.join(base_path, "single_frame.pcd")
+    base_path = r"C:\Pipeline\saved_data\Trajectory_tests"
+    pcd_path = os.path.join(base_path, "trajectory_test_20.pcd")
     pred_json_path = os.path.join(base_path, "prediction_000.json")
     gt_json_path = os.path.join(base_path, "Ground_truth.json")
 

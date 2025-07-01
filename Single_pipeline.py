@@ -12,7 +12,7 @@ def spawn_lidar(world, blueprint_library, location):
     lidar_bp = blueprint_library.find('sensor.lidar.ray_cast')
     lidar_bp.set_attribute('horizontal_fov', '360')
     lidar_bp.set_attribute('sensor_tick', '0.1')
-    lidar_bp.set_attribute('range', '60')
+    lidar_bp.set_attribute('range', '100')
     lidar_bp.set_attribute('channels', '64')
     lidar_bp.set_attribute('points_per_second', '1300000')
     lidar_bp.set_attribute('rotation_frequency', '10')
@@ -26,12 +26,16 @@ def spawn_lidar(world, blueprint_library, location):
         print(" Failed to spawn LiDAR sensor.")
     return lidar
 
-def spawn_vehicle_at(world, blueprint_library, lidar_location, x, y, z=0, yaw=0):
-    vehicle_bp = blueprint_library.filter("vehicle")[0]
+def spawn_vehicle_at(world, blueprint_library, lidar_location, x, y, yaw, z=0):
+    vehicle_bps = blueprint_library.filter("vehicle.*")
+    if not vehicle_bps:
+        raise RuntimeError("No vehicle blueprints found.")
+    vehicle_bp = vehicle_bps[0]
+
     location = carla.Location(
         x=lidar_location.x + x,
         y=lidar_location.y + y,
-        z=0
+        z=z
     )
     rotation = carla.Rotation(pitch=0, yaw=yaw, roll=0)
     transform = carla.Transform(location, rotation)
@@ -44,14 +48,13 @@ def spawn_vehicle_at(world, blueprint_library, lidar_location, x, y, z=0, yaw=0)
         print(f" Failed to spawn vehicle at ({x}, {y}, {z})")
         return None
 
-def save_bounding_boxes_json(vehicles, save_dir, lidar_location,json_filename):
+def save_bounding_boxes_json(vehicles, save_dir, lidar_location, json_filename):
     bounding_boxes = []
 
     for vehicle in vehicles:
         bb = vehicle.bounding_box
         vehicle_transform = vehicle.get_transform()
 
-        # Convert vehicle world position to LiDAR-relative
         center_world = vehicle_transform.location
         center_lidar = {
             "x": center_world.x - lidar_location.x,
@@ -59,7 +62,6 @@ def save_bounding_boxes_json(vehicles, save_dir, lidar_location,json_filename):
             "z": center_world.z - lidar_location.z
         }
 
-        # Bounding box center 
         bb_offset = {
             "x": bb.location.x,
             "y": bb.location.y,
@@ -127,8 +129,6 @@ def visualize_pcd(pcd_path="C:\\Pipeline\\saved_data\\single_frame.pcd"):
 
     vis = o3d.visualization.Visualizer()
     vis.create_window()
-    opt = vis.get_render_option()
-    opt.background_color = np.asarray([0, 0, 0])
     vis.add_geometry(pcd)
     vis.run()
     vis.destroy_window()
@@ -139,8 +139,10 @@ def main():
     parser.add_argument('--port', type=int, default=2000, help='Carla server port')
     parser.add_argument('--x_dist_1', type=float, default=15, help='X distance for vehicle 1')
     parser.add_argument('--y_dist_1', type=float, default=-15, help='Y distance for vehicle 1')
-    parser.add_argument('--x_dist_2', type=float, default=-15, help='X distance for vehicle 2')
-    parser.add_argument('--y_dist_2', type=float, default=15, help='Y distance for vehicle 2')
+    parser.add_argument('--x_dist_2', type=float, help='X distance for vehicle 2')
+    parser.add_argument('--y_dist_2', type=float, help='Y distance for vehicle 2')
+    parser.add_argument('--yaw_1', type=float, default=0, help='Yaw of vehicle 1')
+    parser.add_argument('--yaw_2', type=float, default=0, help='Yaw of vehicle 2')
     parser.add_argument('--save_tag', type=str, default='default_run', help='Tag to name save files')
     parser.add_argument('--test_type', type=str, default='Radial_tests', help='Test type folder name')
 
@@ -156,64 +158,67 @@ def main():
     original_settings = world.get_settings()
     lidar = None
     vehicles = []
+    sensor_queue = Queue()
 
     try:
-        # Apply synchronous simulation settings
         settings = carla.WorldSettings(
             no_rendering_mode=False,
             synchronous_mode=True,
             fixed_delta_seconds=0.1)
         world.apply_settings(settings)
 
-        sensor_queue = Queue()
         lidar_location = carla.Location(x=-150, y=0, z=1.7)
 
-        # Spawn LiDAR at the origin
+        base_save_dir = r"C:\Pipeline\saved_data"
+        save_dir = os.path.join(base_save_dir, args.test_type)
+        os.makedirs(save_dir, exist_ok=True)
+
+        # Create ONLY 'pcd' and 'json' directories (no 'json' folder)
+        pcd_dir = os.path.join(save_dir, "pcd")
+        json_dir = os.path.join(save_dir, "json")
+        os.makedirs(pcd_dir, exist_ok=True)
+        os.makedirs(json_dir, exist_ok=True)
+
+        pcd_path = os.path.join(pcd_dir, f"{args.save_tag}.pcd")
+        json_filename = f"{args.save_tag}.json"
+
+        # Spawn LiDAR sensor
         lidar = spawn_lidar(world, blueprint_library, lidar_location)
         if lidar is None:
             print("Sensor creation failed. Exiting.")
             return
 
-        # Prepare save directory inside test_type folder
-        base_save_dir = r"C:\Pipeline\saved_data"
-        save_dir = os.path.join(base_save_dir, args.test_type)
-        os.makedirs(save_dir, exist_ok=True)
+        def one_shot_callback(data):
+            lidar_callback(data, sensor_queue, save_path=pcd_path)
+            # lidar.stop()  # Optional stop after first frame
 
-        # Save paths using save_tag 
-        pcd_path = os.path.join(save_dir, f"{args.save_tag}.pcd")
-        json_filename = f"{args.save_tag}.json"  
+        lidar.listen(one_shot_callback)
 
-        # Attach LiDAR callback with correct save path
-        lidar.listen(lambda data: lidar_callback(data, sensor_queue, save_path=pcd_path))
+        vehicle_positions = []
+        if args.x_dist_1 is not None and args.y_dist_1 is not None:
+            vehicle_positions.append((args.x_dist_1, args.y_dist_1, args.yaw_1))
+        if args.x_dist_2 is not None and args.y_dist_2 is not None:
+            vehicle_positions.append((args.x_dist_2, args.y_dist_2, args.yaw_2))
 
-        # Define spawn points from arguments
-        vehicle_positions = [
-            (args.x_dist_1, args.y_dist_1),
-            (args.x_dist_2, args.y_dist_2)
-        ]
-
-        # Spawn vehicles at those locations
-        for x, y in vehicle_positions:
-            vehicle = spawn_vehicle_at(world, blueprint_library, lidar_location, x, y)
+        for x, y, yaw in vehicle_positions:
+            vehicle = spawn_vehicle_at(world, blueprint_library, lidar_location, x, y, yaw)
             if vehicle:
                 vehicles.append(vehicle)
 
-        # LiDAR collecting some data
-        print("Collecting LiDAR frames...")
-        for _ in range(5):
-            world.tick()
-            time.sleep(0.1)
+        print("Collecting one LiDAR frame...")
+        world.tick()
+        time.sleep(0.2)
 
-        # Save bounding boxes json
         try:
             _ = sensor_queue.get(timeout=3.0)
             print("LiDAR frame received and saved.")
-            save_bounding_boxes_json(vehicles, save_dir, lidar_location, json_filename)
+            # Save JSON in 'json' folder
+            save_bounding_boxes_json(vehicles, json_dir, lidar_location, json_filename)
         except Empty:
             print("Timeout: No data received from LiDAR sensor.")
 
     finally:
-        print("🧹 Cleaning up...")
+        print("Cleaning up...")
         if lidar:
             lidar.stop()
             lidar.destroy()
@@ -221,8 +226,9 @@ def main():
             v.destroy()
         world.apply_settings(original_settings)
 
-    
+    # To visualize point cloud, uncomment below
     # visualize_pcd(pcd_path)
+
 
 if __name__ == "__main__":
     main()
