@@ -9,10 +9,10 @@ cd C:\Pipeline
 python pcd_to_kitti_bin.py
 
 cd C:\Pipeline/OpenPCDet-Win11-Compatible/tools
-python demo.py ^
---cfg_file C:\Pipeline\Scripts\cfgs/kitti_models/pv_rcnn.yaml ^
---ckpt C:\Pipeline\models/pv_rcnn_8369.pth ^
---data_path C:\Pipeline\saved_data\Azimutal_tests\bin\azimutal_separability_22m.bin
+python C:\Pipeline/Scripts/demo.py ^
+--cfg_file C:\Pipeline/Scripts/cfgs/kitti_models/pv_rcnn.yaml ^
+--ckpt C:\Pipeline/models/pv_rcnn_8369.pth ^
+--data_path C:\Pipeline\saved_data\Azimutal_tests\bin\azimutal_separability_4.5m.bin
 cd C:\Pipeline
 python BB_overlap.py
 cd C:\OpenPCDet-Win11-Compatible/win_env_openpcdet/Scripts 
@@ -60,3 +60,10 @@ cd C:\Pipeline
 python BB_overlap.py
 cd C:\OpenPCDet-Win11-Compatible/win_env_openpcdet/Scripts 
 deactivate
+
+
+
+
+pcd_path = os.path.join(r"C:\Pipeline\saved_data\Azimutal_tests\pcd", "azimutal_separability_2.5m.pcd")
+pred_json_path = os.path.join(r"C:\Pipeline\saved_data\Azimutal_tests\pred_json", "azimutal_separability_2.5m.json")
+gt_json_path = os.path.join(r"C:\Pipeline\saved_data\Azimutal_tests\json", "azimutal_separability_2.5m.json")

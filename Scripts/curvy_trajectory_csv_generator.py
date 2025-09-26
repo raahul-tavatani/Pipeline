@@ -2,6 +2,11 @@ import csv
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import os
+
+# Automatically determine the directory of the running script
+script_dir = os.path.dirname(os.path.abspath(__file__))
+file_path = os.path.join(script_dir, 'curvy_trajectory.csv')
 
 # Function to generate a curvy trajectory using a sine wave
 def generate_trajectory(x_range, y_range, frequency, num_points):
@@ -12,10 +17,14 @@ def generate_trajectory(x_range, y_range, frequency, num_points):
 
 # Function to save the trajectory to a CSV file
 def save_trajectory_to_csv(points, file_name):
-    with open(file_name, 'w', newline='') as csvfile:
-        csvwriter = csv.writer(csvfile)
-        csvwriter.writerow(['x', 'y', 'angle'])
-        csvwriter.writerows(points)
+    try:
+        with open(file_name, 'w', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            csvwriter.writerow(['x', 'y', 'angle'])
+            csvwriter.writerows(points)
+        print(f"CSV saved to: {file_name}")
+    except Exception as e:
+        print("Error saving CSV:", e)
 
 # Function to plot the trajectory and vehicle
 def plot_trajectory_with_vehicle(points):
@@ -36,7 +45,8 @@ def plot_trajectory_with_vehicle(points):
             vehicle_width,
             angle=angle,
             edgecolor='r',
-            facecolor='none'
+            facecolor='none',
+            transform=patches.transforms.Affine2D().rotate_deg_around(x, y, angle) + ax.transData
         )
         ax.add_patch(rect)
     
@@ -44,20 +54,20 @@ def plot_trajectory_with_vehicle(points):
     plt.xlabel('X')
     plt.ylabel('Y')
     plt.title('Trajectory with Vehicle Representation')
+    plt.grid(True)
     plt.show()
 
 # Parameters for the trajectory
 x_range = (0, 90)
 y_range = (-50, 50)
 frequency = 7
-num_points = 15
+num_points = 30
 
 # Generate the trajectory
 trajectory_points = generate_trajectory(x_range, y_range, frequency, num_points)
 
-# Save the trajectory to a CSV file
-save_trajectory_to_csv(trajectory_points, 'curvy_trajectory.csv')
+# Save the trajectory to a CSV file in the same directory as the script
+save_trajectory_to_csv(trajectory_points, file_path)
 
 # Plot the trajectory with vehicle representation
 plot_trajectory_with_vehicle(trajectory_points)
-

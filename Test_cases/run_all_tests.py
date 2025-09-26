@@ -1,3 +1,5 @@
+# Test_cases\run_all_tests.py
+
 import subprocess
 import time
 import os
@@ -69,7 +71,7 @@ def main():
         kill_process_on_port(3000)
         kill_process_on_port(4000)
 
-        print("🎉 All done.")
+        print(" All done.")
 
 if __name__ == "__main__":
     main()

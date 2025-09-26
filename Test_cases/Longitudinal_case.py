@@ -8,7 +8,7 @@ PORT = 2000
 X_START = 10
 X_END = 100
 STEP = 10
-GAP = 5  # lateral gap between vehicles
+GAP = 3.3  # lateral gap between vehicles
 
 
 for x in range(X_START, X_END + 1, STEP):

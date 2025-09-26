@@ -37,14 +37,14 @@ def visualize(pcd, pred_boxes, gt_boxes):
         extent = box[3:6]
         yaw_rad = box[6]
         yaw_deg = math.degrees(yaw_rad)
-        bbox = create_bbox(center_flipped, extent, yaw_deg, color=(1, 0, 0))
+        bbox = create_bbox(center_flipped, extent, -yaw_deg, color=(1, 0, 0))
         geometries.append(bbox)
 
     #  Green: Ground truth boxes
     for obj in gt_boxes:
         center = obj['center_lidar']
         extent = obj['extent']
-        yaw = obj['rotation']['yaw']  # Already in LiDAR frame
+        yaw = obj['rotation']['yaw']  
 
         offset = obj.get('bounding_box_offset', {'x': 0, 'y': 0, 'z': 0})
 
@@ -67,10 +67,10 @@ def visualize(pcd, pred_boxes, gt_boxes):
 
 
 def main():
-    base_path = r"C:\Pipeline\saved_data\Trajectory_tests"
-    pcd_path = os.path.join(base_path, "trajectory_test_20.pcd")
-    pred_json_path = os.path.join(base_path, "prediction_000.json")
-    gt_json_path = os.path.join(base_path, "Ground_truth.json")
+    #base_path = r"C:\Pipeline\saved_data\Trajectory_tests"
+    pcd_path = os.path.join(r"C:\Pipeline\saved_data\Trajectory_tests\pcd", "trajectory_test_10.pcd")
+    pred_json_path = os.path.join(r"C:\Pipeline\saved_data\Trajectory_tests\pred_json", "trajectory_test_10.json")
+    gt_json_path = os.path.join(r"C:\Pipeline\saved_data\Trajectory_tests\json", "trajectory_test_10.json")
 
     for path in [pcd_path, pred_json_path, gt_json_path]:
         if not os.path.exists(path):

@@ -1,0 +1,13 @@
+scenario,mode,iou,class,AP
+Azimutal_tests,bev,0.5,Car,1.0
+Azimutal_tests,bev,0.5,mAP,1.0
+Azimutal_tests,bev,0.7,Car,1.0
+Azimutal_tests,bev,0.7,mAP,1.0
+Radial_tests,bev,0.5,Car,0.41923076923076924
+Radial_tests,bev,0.5,mAP,0.41923076923076924
+Radial_tests,bev,0.7,Car,0.41923076923076924
+Radial_tests,bev,0.7,mAP,0.41923076923076924
+Trajectory_tests,bev,0.5,Car,0.22916666666666669
+Trajectory_tests,bev,0.5,mAP,0.22916666666666669
+Trajectory_tests,bev,0.7,Car,0.22916666666666669
+Trajectory_tests,bev,0.7,mAP,0.22916666666666669

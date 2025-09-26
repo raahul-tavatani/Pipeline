@@ -1,3 +1,5 @@
+#Single_pipeline.py
+
 import numpy as np
 import open3d as o3d
 import carla
@@ -10,11 +12,11 @@ import argparse
 
 def spawn_lidar(world, blueprint_library, location):
     lidar_bp = blueprint_library.find('sensor.lidar.ray_cast')
-    lidar_bp.set_attribute('horizontal_fov', '360')
+    lidar_bp.set_attribute('horizontal_fov', '120')
     lidar_bp.set_attribute('sensor_tick', '0.1')
-    lidar_bp.set_attribute('range', '100')
+    lidar_bp.set_attribute('range', '150')
     lidar_bp.set_attribute('channels', '64')
-    lidar_bp.set_attribute('points_per_second', '1300000')
+    lidar_bp.set_attribute('points_per_second', '5000000')
     lidar_bp.set_attribute('rotation_frequency', '10')
     lidar_bp.set_attribute('upper_fov', '7')
     lidar_bp.set_attribute('lower_fov', '-16')
@@ -26,7 +28,7 @@ def spawn_lidar(world, blueprint_library, location):
         print(" Failed to spawn LiDAR sensor.")
     return lidar
 
-def spawn_vehicle_at(world, blueprint_library, lidar_location, x, y, yaw, z=0):
+def spawn_vehicle_at(world, blueprint_library, lidar_location, x, y, yaw, z=0.4): # z = 0.4 because of the ground
     vehicle_bps = blueprint_library.filter("vehicle.*")
     if not vehicle_bps:
         raise RuntimeError("No vehicle blueprints found.")
@@ -35,7 +37,7 @@ def spawn_vehicle_at(world, blueprint_library, lidar_location, x, y, yaw, z=0):
     location = carla.Location(
         x=lidar_location.x + x,
         y=lidar_location.y + y,
-        z=z
+        z= z
     )
     rotation = carla.Rotation(pitch=0, yaw=yaw, roll=0)
     transform = carla.Transform(location, rotation)
@@ -150,7 +152,7 @@ def main():
 
     client = carla.Client(args.host, args.port)
     client.set_timeout(10.0)
-    client.load_world('Lidar_Testing_Ground')
+    client.load_world('Proving_Ground')
 
     world = client.get_world()
     blueprint_library = world.get_blueprint_library()
@@ -167,7 +169,7 @@ def main():
             fixed_delta_seconds=0.1)
         world.apply_settings(settings)
 
-        lidar_location = carla.Location(x=-150, y=0, z=1.7)
+        lidar_location = carla.Location(x=-150, y=0, z=2.1) #Lidar spawns at 1.7, 0.4 m is added because of the world is at (0,0,0.4)
 
         base_save_dir = r"C:\Pipeline\saved_data"
         save_dir = os.path.join(base_save_dir, args.test_type)
